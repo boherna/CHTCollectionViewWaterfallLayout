@@ -148,6 +148,10 @@ const NSInteger unionSize = 20;
     } else {
       attributes.frame = CGRectMake(self.sectionInset.left, sectionTop, width, self.headerHeight);
     }
+	if (!attributes.frame.size.height)
+	{
+		attributes.hidden = YES;
+	}
     [self.headersAttributes addObject:attributes];
     [self.allItemAttributes addObject:attributes];
 
@@ -185,6 +189,10 @@ const NSInteger unionSize = 20;
       attributes.frame = CGRectMake(self.sectionInset.left, yOffset, width, footerHeight);
     } else {
       attributes.frame = CGRectMake(self.sectionInset.left, yOffset, width, self.footerHeight);
+    }
+    if (!attributes.frame.size.height)
+    {
+	  attributes.hidden = YES;
     }
     [self.footersAttributes addObject:attributes];
     [self.allItemAttributes addObject:attributes];
