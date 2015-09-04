@@ -11,19 +11,19 @@ import UIKit
 
 @objc protocol CHTCollectionViewDelegateWaterfallLayout: UICollectionViewDelegate{
     
-    func collectionView (collectionView: UICollectionView!,layout collectionViewLayout: UICollectionViewLayout,
+    func collectionView (collectionView: UICollectionView,layout collectionViewLayout: UICollectionViewLayout,
         sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize
     
-    optional func colletionView (collectionView: UICollectionView!, layout collectionViewLayout: UICollectionViewLayout,
+    optional func collectionView (collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout,
         heightForHeaderInSection section: NSInteger) -> CGFloat
     
-    optional func colletionView (collectionView: UICollectionView!, layout collectionViewLayout: UICollectionViewLayout,
+    optional func collectionView (collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout,
         heightForFooterInSection section: NSInteger) -> CGFloat
     
-    optional func colletionView (collectionView: UICollectionView!, layout collectionViewLayout: UICollectionViewLayout,
+    optional func collectionView (collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout,
         insetForSectionAtIndex section: NSInteger) -> UIEdgeInsets
     
-    optional func colletionView (collectionView: UICollectionView!, layout collectionViewLayout: UICollectionViewLayout,
+    optional func collectionView (collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout,
         minimumInteritemSpacingForSectionAtIndex section: NSInteger) -> CGFloat
 }
 
@@ -114,12 +114,12 @@ class CHTCollectionViewWaterfallLayout : UICollectionViewLayout{
     
     func itemWidthInSectionAtIndex (section : NSInteger) -> CGFloat {
         var insets : UIEdgeInsets
-        if let sectionInsets = self.delegate?.colletionView?(self.collectionView!, layout: self, insetForSectionAtIndex: section){
+        if let sectionInsets = self.delegate?.collectionView?(self.collectionView!, layout: self, insetForSectionAtIndex: section){
             insets = sectionInsets
         }else{
             insets = self.sectionInset
         }
-        let width:CGFloat = self.collectionView!.frame.size.width - sectionInset.left-sectionInset.right
+        let width:CGFloat = self.collectionView!.bounds.size.width - sectionInset.left-sectionInset.right
         let spaceColumCount:CGFloat = CGFloat(self.columnCount-1)
         return floor((width - (spaceColumCount*self.minimumColumnSpacing)) / CGFloat(self.columnCount))
     }
@@ -153,20 +153,20 @@ class CHTCollectionViewWaterfallLayout : UICollectionViewLayout{
             * 1. Get section-specific metrics (minimumInteritemSpacing, sectionInset)
             */
             var minimumInteritemSpacing : CGFloat
-            if let miniumSpaceing = self.delegate?.colletionView?(self.collectionView!, layout: self, minimumInteritemSpacingForSectionAtIndex: section){
+            if let miniumSpaceing = self.delegate?.collectionView?(self.collectionView!, layout: self, minimumInteritemSpacingForSectionAtIndex: section){
                 minimumInteritemSpacing = miniumSpaceing
             }else{
                 minimumInteritemSpacing = self.minimumColumnSpacing
             }
             
             var sectionInsets :  UIEdgeInsets
-            if let insets = self.delegate?.colletionView?(self.collectionView!, layout: self, insetForSectionAtIndex: section){
+            if let insets = self.delegate?.collectionView?(self.collectionView!, layout: self, insetForSectionAtIndex: section){
                 sectionInsets = insets
             }else{
                 sectionInsets = self.sectionInset
             }
             
-            let width = self.collectionView!.frame.size.width - sectionInset.left - sectionInset.right
+            let width = self.collectionView!.bounds.size.width - sectionInset.left - sectionInset.right
             let spaceColumCount = CGFloat(self.columnCount-1)
             let itemWidth = floor((width - (spaceColumCount*self.minimumColumnSpacing)) / CGFloat(self.columnCount))
             
@@ -174,7 +174,7 @@ class CHTCollectionViewWaterfallLayout : UICollectionViewLayout{
             * 2. Section header
             */
             var heightHeader : CGFloat
-            if let height = self.delegate?.colletionView?(self.collectionView!, layout: self, heightForHeaderInSection: section){
+            if let height = self.delegate?.collectionView?(self.collectionView!, layout: self, heightForHeaderInSection: section){
                 heightHeader = height
             }else{
                 heightHeader = self.headerHeight
@@ -182,15 +182,15 @@ class CHTCollectionViewWaterfallLayout : UICollectionViewLayout{
             
             if heightHeader > 0 {
                 attributes = UICollectionViewLayoutAttributes(forSupplementaryViewOfKind: CHTCollectionElementKindSectionHeader, withIndexPath: NSIndexPath(forRow: 0, inSection: section))
-                attributes.frame = CGRectMake(0, top, self.collectionView!.frame.size.width, heightHeader)
+                attributes.frame = CGRectMake(0, top, self.collectionView!.bounds.size.width, heightHeader)
                 self.headersAttributes.setObject(attributes, forKey: (section))
                 self.allItemAttributes.addObject(attributes)
             
-                top = CGRectGetMaxX(attributes.frame)
+                top = CGRectGetMaxY(attributes.frame)
             }
             top += sectionInset.top
             for var idx = 0; idx < self.columnCount; idx++ {
-                self.columnHeights.setObject(top, atIndexedSubscript: idx)
+                self.columnHeights[idx]=top;
             }
             
             /*
@@ -216,7 +216,7 @@ class CHTCollectionViewWaterfallLayout : UICollectionViewLayout{
                 attributes.frame = CGRectMake(xOffset, CGFloat(yOffset), itemWidth, itemHeight)
                 itemAttributes.addObject(attributes)
                 self.allItemAttributes.addObject(attributes)
-                self.columnHeights.setObject(CGRectGetMaxY(attributes.frame) + minimumInteritemSpacing, atIndexedSubscript: columnIndex)
+                self.columnHeights[columnIndex]=CGRectGetMaxY(attributes.frame) + minimumInteritemSpacing;
             }
             self.sectionItemAttributes.addObject(itemAttributes)
             
@@ -227,7 +227,7 @@ class CHTCollectionViewWaterfallLayout : UICollectionViewLayout{
             let columnIndex  = self.longestColumnIndex()
             top = CGFloat(self.columnHeights.objectAtIndex(columnIndex).floatValue) - minimumInteritemSpacing + sectionInset.bottom
     
-            if let height = self.delegate?.colletionView?(self.collectionView!, layout: self, heightForFooterInSection: section){
+            if let height = self.delegate?.collectionView?(self.collectionView!, layout: self, heightForFooterInSection: section){
                 footerHeight = height
             }else{
                 footerHeight = self.footerHeight
@@ -235,14 +235,14 @@ class CHTCollectionViewWaterfallLayout : UICollectionViewLayout{
             
             if footerHeight > 0 {
                 attributes = UICollectionViewLayoutAttributes(forSupplementaryViewOfKind: CHTCollectionElementKindSectionFooter, withIndexPath: NSIndexPath(forItem: 0, inSection: section))
-                attributes.frame = CGRectMake(0, top, self.collectionView!.frame.size.width, footerHeight)
+                attributes.frame = CGRectMake(0, top, self.collectionView!.bounds.size.width, footerHeight)
                 self.footersAttributes.setObject(attributes, forKey: section)
                 self.allItemAttributes.addObject(attributes)
                 top = CGRectGetMaxY(attributes.frame)
             }
             
             for var idx = 0; idx < self.columnCount; idx++ {
-                self.columnHeights.setObject(top, atIndexedSubscript: idx)
+                self.columnHeights[idx] = top
             }
         }
         
@@ -280,7 +280,7 @@ class CHTCollectionViewWaterfallLayout : UICollectionViewLayout{
         return list.objectAtIndex(indexPath.item) as UICollectionViewLayoutAttributes
     }
     
-    override func layoutAttributesForSupplementaryViewOfKind(elementKind: String, atIndexPath indexPath: NSIndexPath) -> UICollectionViewLayoutAttributes!{
+    override func layoutAttributesForSupplementaryViewOfKind(elementKind: String, atIndexPath indexPath: NSIndexPath) -> UICollectionViewLayoutAttributes{
         var attribute = UICollectionViewLayoutAttributes()
         if elementKind == CHTCollectionElementKindSectionHeader{
             attribute = self.headersAttributes.objectForKey(indexPath.section) as UICollectionViewLayoutAttributes
